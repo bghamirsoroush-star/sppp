@@ -8,171 +8,162 @@ import threading
 import time
 import random
 import sys
+import concurrent.futures
 
-# English names and messages
+# میم‌های فارسی خالص
 NAMES = [
-    "John", "Mike", "Alex", "Sam", "Tom", "David", "Chris", "Ryan",
-    "Bot1", "Bot2", "Bot3", "Bot4", "Bot5", "Bot6", "Bot7", "Bot8",
-    "User1", "User2", "User3", "User4", "User5", "User6", "User7",
-    "Test1", "Test2", "Test3", "Test4", "Test5", "Guest1", "Guest2"
+    "۲۶", "۲۶۰", "۶۶۶", "۴۲۰", "۱۴", "۴۰", "۱۹", "۲۵",
+    "ادب", "ذات", "شرافت", "عقل", "حیا", "منطق", "اخلاق", "وجدان",
+    "شرف", "ناموس", "غیرت", "مرام", "پارتی", "رانت", "فیلم سوپر",
+    "کصشر", "مغز", "کلیه", "پول", "ماشین", "خونه", "زندونی",
+    "تیک تاک", "اینستا", "شاد", "روبیکا", "ایتا", "بله", "گپ",
+    "پیروز", "دخترخاله", "پسرخاله", "عمه", "خاله", "عمو", "دایی"
 ]
 
 SPAM_MESSAGES = [
-    "Hello everyone!", "How are you?", "This is fun!",
-    "Great class!", "Interesting topic!", "Thanks teacher!",
-    "Can you repeat that?", "I have a question", "Well explained!",
-    "Good point!", "I agree", "Nice presentation!",
-    "Learning a lot!", "Keep going!", "Awesome!",
-    "Thank you!", "Well done!", "Perfect!",
-    "Amazing!", "Cool!", "Wow!", "Great job!",
-    "I'm here!", "Listening!", "Watching!",
-    "Good morning!", "Good afternoon!", "Hello teacher!"
+    "۲۶ به ازای هر چیزی", "۲۶۰ ماشین سوار", "۶۶۶ شیطانی", "۴۲۰ حال کن",
+    "۱۴ معصوم", "۴۰ صیک", "۱۹ بهله", "۲۵ سالم",
+    "ادب از که اموختی", "ذات ما همینه دیگه", "شرافت فروشی نکن", "عقل کل",
+    "حیا کن دیگه", "منطق میخواد", "اخلاق هم چیز خوبیه", "وجدان بیدار",
+    "شرف بزار کنار", "ناموس حرف نزن", "غیرت مردونه", "مرام بزار رو میز",
+    "پارتی بازی درسته", "رانت خوری عالیه", "فیلم سوپر ندیدم", "کصشر نگو",
+    "مغز داری استفاده کن", "کلیه اتو فروختی", "پول پارو میکنم", "ماشین مدل بالا",
+    "خونه شمال شهر", "زندونی شدم", "تیک تاک بزن بریم", "اینستا فالو کن",
+    "شاد باز کن", "روبیکا چت", "ایتا بیا پیوی", "بله آنلاین", "گپ گروهی",
+    "پیروز نژاد", "دخترخاله ام", "پسرخاله شد", "عمه جون", "خاله خانم",
+    "عمو سبزی فروش", "دایی جان", "صیک پاک کن", "گول نخور", "کلاه بذار"
 ]
 
-class SkyRoomSpamBot:
+class SkyRoomFarsiSpam:
     def __init__(self):
         self.drivers = []
         self.success_count = 0
         self.spam_count = 0
         self.lock = threading.Lock()
         self.active_threads = 0
-        self.max_threads = 20
+        self.max_threads = 30
         self.start_time = None
-        self.running = True
-        self.skyroom_link = ""
         
     def setup_driver(self):
-        """Setup Chrome driver"""
+        """تنظیمات کروم بهینه‌شده"""
         chrome_options = Options()
         chrome_options.add_argument("--incognito")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
-        
-        # Performance optimizations
         chrome_options.add_argument("--disable-extensions")
         chrome_options.add_argument("--disable-images")
+        chrome_options.add_argument("--disable-javascript")
         chrome_options.add_argument("--disable-plugins")
+        chrome_options.add_argument("--disable-background-timer-throttling")
+        chrome_options.add_argument("--disable-renderer-backgrounding")
+        chrome_options.add_argument("--disable-backgrounding-occluded-windows")
+        chrome_options.add_argument("--memory-pressure-off")
         
-        try:
-            driver = webdriver.Chrome(options=chrome_options)
-            driver.set_page_load_timeout(20)
-            self.drivers.append(driver)
-            return driver
-        except Exception as e:
-            print(f"❌ Chrome driver error: {e}")
-            return None
+        chrome_options.add_experimental_option("prefs", {
+            "profile.default_content_setting_values.notifications": 2,
+            "profile.default_content_settings.popups": 0,
+        })
+        
+        driver = webdriver.Chrome(options=chrome_options)
+        driver.set_page_load_timeout(20)
+        self.drivers.append(driver)
+        return driver
 
-    def join_class(self, name, user_id, total_users):
-        """Join SkyRoom class"""
+    def join_class(self, name, user_id, total_users, skyroom_link):
+        """ورود به کلاس"""
         driver = self.setup_driver()
-        if not driver:
-            return
-            
         try:
-            print(f"🎯 User {user_id}/{total_users}: {name}")
+            print(f"🎯 کاربر {user_id} از {total_users}: {name}")
             
-            # Step 1: Go to SkyRoom link
-            driver.get(self.skyroom_link)
-            time.sleep(3)
+            # مرحله ۱: رفتن به لینک اسکای روم
+            driver.get(skyroom_link)
+            time.sleep(1.5)
             
-            # Step 2: Click guest button
-            guest_btn = WebDriverWait(driver, 10).until(
+            # مرحله ۲: کلیک مهمان
+            guest_btn = WebDriverWait(driver, 8).until(
                 EC.element_to_be_clickable((By.ID, "btn_guest"))
             )
             guest_btn.click()
-            time.sleep(2)
+            time.sleep(1)
             
-            # Step 3: Enter name
-            name_field = WebDriverWait(driver, 10).until(
+            # مرحله ۳: وارد کردن نام
+            name_field = WebDriverWait(driver, 8).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, "input.full-width[type='text']"))
             )
             name_field.clear()
-            name_field.send_keys(name)
-            time.sleep(1)
             
-            # Step 4: Click confirm
-            confirm_btn = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[.//span[contains(text(), 'تأیید') or contains(text(), 'Confirm')]]"))
+            for char in name:
+                name_field.send_keys(char)
+                time.sleep(0.02)
+            
+            time.sleep(0.5)
+            
+            # مرحله ۴: کلیک تأیید
+            confirm_btn = WebDriverWait(driver, 8).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[.//span[contains(text(), 'تأیید')]]"))
             )
             confirm_btn.click()
-            time.sleep(3)
+            time.sleep(2)
             
-            print(f"✅ User {user_id}/{total_users} joined: {name}")
+            print(f"✅ کاربر {user_id} از {total_users} وارد شد: {name}")
             with self.lock:
                 self.success_count += 1
             
-            # Start spamming
-            self.start_spam(driver, name, user_id, total_users)
+            # شروع اسپم
+            self.farsi_spam(driver, name, user_id, total_users)
             
         except Exception as e:
-            print(f"❌ Error with user {user_id}: {e}")
+            print(f"❌ خطا در کاربر {user_id}: {e}")
             try:
                 driver.quit()
-                if driver in self.drivers:
-                    self.drivers.remove(driver)
             except:
                 pass
         finally:
             with self.lock:
                 self.active_threads -= 1
 
-    def start_spam(self, driver, name, user_id, total_users):
-        """Start spamming messages"""
-        if not self.running:
-            return
-            
-        print(f"🔥 User {user_id}/{total_users} started spamming!")
+    def farsi_spam(self, driver, name, user_id, total_users):
+        """اسپم با میم‌های فارسی"""
+        print(f"🔥 کاربر {user_id} از {total_users} شروع اسپم کرد!")
         
         session_count = 0
-        max_sessions = random.randint(2, 4)
+        max_sessions = random.randint(2, 5)
         
-        while session_count < max_sessions and self.running:
+        while session_count < max_sessions:
             try:
-                # Find chat element
                 chat_element = self.find_chat_element(driver)
                 if chat_element:
-                    # Spam messages in this session
-                    messages_count = random.randint(3, 8)
+                    messages_count = random.randint(5, 12)
                     
                     for i in range(messages_count):
-                        if not self.running:
-                            break
-                            
                         message = random.choice(SPAM_MESSAGES)
-                        if self.send_message(driver, chat_element, message):
+                        if self.send_farsi_message(driver, chat_element, message):
                             with self.lock:
                                 self.spam_count += 1
-                            
-                            if self.spam_count % 10 == 0:
-                                print(f"💬 Message {self.spam_count} sent")
+                            print(f"💬 کاربر {user_id} پیام {self.spam_count}: {message}")
                         
-                        time.sleep(random.uniform(0.5, 1.5))
+                        time.sleep(random.uniform(0.1, 0.5))
                     
                     session_count += 1
-                    if self.running:
-                        print(f"🎯 User {user_id} session {session_count} completed")
+                    print(f"🎯 کاربر {user_id} session {session_count} تمام شد")
                 
-                # Break between sessions
-                if self.running and session_count < max_sessions:
-                    break_time = random.randint(5, 15)
-                    print(f"⏳ User {user_id} waiting {break_time} seconds...")
-                    time.sleep(break_time)
+                break_time = random.randint(3, 10)
+                if break_time > 5:
+                    print(f"⏳ کاربر {user_id} منتظر {break_time} ثانیه...")
+                time.sleep(break_time)
                 
             except Exception as e:
-                if self.running:
-                    print(f"⚠️ Spam error user {user_id}: {e}")
-                time.sleep(2)
+                print(f"⚠️ خطا در اسپم کاربر {user_id}: {e}")
+                time.sleep(1)
         
-        if self.running:
-            print(f"🎊 User {user_id}/{total_users} finished spamming!")
+        print(f"🎊 کاربر {user_id} از {total_users} اسپم تمام کرد!")
         
-        # Keep user in class
         self.keep_alive(driver, name, user_id, total_users)
 
     def find_chat_element(self, driver):
-        """Find chat input field"""
+        """پیدا کردن فیلد چت"""
         selectors = [
             "div[contenteditable='true']",
             "input[type='text']", 
@@ -184,223 +175,172 @@ class SkyRoomSpamBot:
             try:
                 elements = driver.find_elements(By.CSS_SELECTOR, selector)
                 for element in elements:
-                    try:
-                        if element.is_displayed() and element.is_enabled():
-                            return element
-                    except:
-                        continue
+                    if element.is_displayed() and element.is_enabled():
+                        return element
             except:
                 continue
         return None
 
-    def send_message(self, driver, chat_element, message):
-        """Send message to chat"""
+    def send_farsi_message(self, driver, chat_element, message):
+        """ارسال پیام فارسی"""
         try:
             chat_element.click()
-            time.sleep(0.2)
+            time.sleep(0.05)
             
-            # Clear content
             if chat_element.get_attribute('contenteditable') == 'true':
                 driver.execute_script("arguments[0].innerHTML = '';", chat_element)
             else:
                 chat_element.clear()
             
-            # Send message
             chat_element.send_keys(message)
-            time.sleep(0.2)
+            time.sleep(0.05)
             chat_element.send_keys(Keys.ENTER)
-            time.sleep(0.3)
+            time.sleep(0.1)
             
             return True
         except:
             return False
 
     def keep_alive(self, driver, name, user_id, total_users):
-        """Keep user in class"""
+        """نگه داشتن کاربر در کلاس"""
         counter = 0
         try:
-            while self.running and counter < 60:  # Stay for 30 minutes max
+            while True:
                 time.sleep(30)
                 counter += 0.5
-                if counter % 10 == 0 and self.running:
-                    print(f"💚 User {user_id}/{total_users} online ({int(counter)} minutes)")
+                if counter % 5 == 0:
+                    print(f"💚 کاربر {user_id} از {total_users} آنلاین ({int(counter)} دقیقه)")
         except:
             pass
-        finally:
-            try:
-                driver.quit()
-                if driver in self.drivers:
-                    self.drivers.remove(driver)
-            except:
-                pass
 
-    def run_spam(self):
-        """Main spam execution"""
-        print("🚀 SkyRoom Spam Bot Started")
-        print("=" * 50)
-        
-        # Get SkyRoom link
-        self.skyroom_link = input("🔗 Enter SkyRoom link: ").strip()
-        if not self.skyroom_link:
-            print("❌ No link provided! Using default...")
-            self.skyroom_link = "https://www.skyroom.online/ch/soroushamir/riazi101101"
-        
-        # Get number of users
-        try:
-            user_count = int(input("👥 Enter number of users: "))
-            if user_count <= 0:
-                print("❌ Number must be positive! Using 5 users...")
-                user_count = 5
-        except:
-            print("❌ Invalid number! Using 5 users...")
-            user_count = 5
-        
-        # Final confirmation
-        print(f"\n⚠️  Start with {user_count} users?")
-        confirm = input("✅ Confirm (y/n): ").strip().lower()
-        
-        if confirm != 'y':
-            print("❌ Operation cancelled!")
-            return
-        
-        print(f"\n🎯 Starting spam with {user_count} users")
-        print(f"🔗 Link: {self.skyroom_link}")
-        print("👻 Headless mode: Active")
-        print("⚡ Turbo mode: Active")
+    def run_with_user_count(self, user_count, skyroom_link):
+        """اجرای اصلی با لینک و تعداد کاربران انتخابی"""
+        print(f"🚀 شروع اسپم با {user_count} کاربر")
+        print(f"🎯 لینک: {skyroom_link}")
+        print("👻 حالت مخفی: فعال")
+        print("⚡ حالت توربو: فعال")
+        print("🔥 میم‌های فارسی فعال شد!")
         print("=" * 50)
         
         self.start_time = time.time()
-        self.running = True
         
-        # Start monitoring
-        monitor_thread = threading.Thread(target=self.progress_monitor, args=(user_count,))
-        monitor_thread.daemon = True
-        monitor_thread.start()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_threads) as executor:
+            futures = []
+            for i in range(user_count):
+                name = random.choice(NAMES)
+                future = executor.submit(self.quick_join, name, i+1, user_count, skyroom_link)
+                futures.append(future)
+                time.sleep(0.1)
+            
+            concurrent.futures.wait(futures)
         
-        try:
-            # Use ThreadPoolExecutor for efficient thread management
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_threads) as executor:
-                # Start all users quickly
-                futures = []
-                for i in range(user_count):
-                    if not self.running:
-                        break
-                        
-                    name = random.choice(NAMES)
-                    future = executor.submit(self.quick_join, name, i+1, user_count)
-                    futures.append(future)
-                    time.sleep(0.3)  # Small delay between starting users
-                
-                # Wait for completion
-                for future in concurrent.futures.as_completed(futures):
-                    if not self.running:
-                        break
-                    future.result()
-                    
-        except KeyboardInterrupt:
-            print("\n🛑 Stopped by user...")
-            self.running = False
-        except Exception as e:
-            print(f"❌ Unexpected error: {e}")
-            self.running = False
-        finally:
-            self.running = False
-            time.sleep(2)
-            self.final_report(user_count)
+        self.final_report(user_count)
 
-    def quick_join(self, name, user_id, total_users):
-        """Quick user join"""
+    def quick_join(self, name, user_id, total_users, skyroom_link):
+        """ورود سریع کاربر"""
         with self.lock:
             self.active_threads += 1
-        self.join_class(name, user_id, total_users)
+            
+        self.join_class(name, user_id, total_users, skyroom_link)
 
     def progress_monitor(self, user_count):
-        """Monitor progress"""
+        """مانیتور کردن پیشرفت"""
         try:
-            while self.running and (self.active_threads > 0 or time.time() - self.start_time < 30):
+            while self.active_threads > 0:
                 elapsed = int(time.time() - self.start_time)
+                success_rate = (self.success_count / user_count) * 100
                 
-                if elapsed % 10 == 0:  # Report every 10 seconds
-                    success_rate = (self.success_count / user_count) * 100 if user_count > 0 else 0
-                    
-                    print(f"\n📊 Progress Report ({elapsed} seconds):")
-                    print(f"   ✅ Successful users: {self.success_count}/{user_count} ({success_rate:.1f}%)")
-                    print(f"   💬 Messages sent: {self.spam_count}")
-                    print(f"   🧵 Active users: {self.active_threads}")
-                    if elapsed > 0:
-                        print(f"   🚀 Messages per minute: {self.spam_count / (elapsed/60):.1f}")
-                    print("-" * 40)
+                print(f"\n📊 گزارش فوری ({elapsed} ثانیه):")
+                print(f"   ✅ کاربران موفق: {self.success_count}/{user_count} ({success_rate:.1f}%)")
+                print(f"   💬 پیام‌های ارسالی: {self.spam_count}")
+                print(f"   🧵 کاربران فعال: {self.active_threads}")
+                if elapsed > 0:
+                    print(f"   ⚡ میانگین پیام در دقیقه: {self.spam_count / (elapsed/60):.1f}")
+                print("-" * 40)
                 
                 time.sleep(10)
                 
-        except Exception as e:
-            if self.running:
-                print(f"⚠️ Monitor error: {e}")
+        except KeyboardInterrupt:
+            print("\n🛑 توقف توسط کاربر...")
 
     def final_report(self, user_count):
-        """Final report"""
+        """گزارش نهایی"""
         total_time = int(time.time() - self.start_time)
-        success_rate = (self.success_count / user_count) * 100 if user_count > 0 else 0
+        success_rate = (self.success_count / user_count) * 100
         messages_per_minute = self.spam_count / (total_time/60) if total_time > 0 else 0
         
         print("\n" + "=" * 50)
-        print("🎊 Operation Complete!")
+        print("🎊 عملیات کامل شد!")
         print("=" * 50)
-        print(f"📈 Final Results:")
-        print(f"   👥 Requested users: {user_count}")
-        print(f"   ✅ Successful users: {self.success_count} ({success_rate:.1f}%)")
-        print(f"   💬 Total messages: {self.spam_count}")
-        print(f"   ⏱️ Total time: {total_time} seconds")
-        print(f"   🚀 Messages per minute: {messages_per_minute:.1f}")
+        print(f"📈 نتایج نهایی:")
+        print(f"   👥 تعداد کاربران درخواستی: {user_count}")
+        print(f"   ✅ کاربران موفق: {self.success_count} ({success_rate:.1f}%)")
+        print(f"   💬 مجموع پیام‌ها: {self.spam_count}")
+        print(f"   ⏱️ زمان کل: {total_time} ثانیه")
+        print(f"   🚀 میانگین پیام در دقیقه: {messages_per_minute:.1f}")
         print("=" * 50)
-
-    def stop(self):
-        """Stop operation"""
-        print("\n🛑 Stopping operation...")
-        self.running = False
-        self.close_all()
 
     def close_all(self):
-        """Close all drivers"""
-        print("\n🔒 Closing Chrome drivers...")
-        self.running = False
-        
-        for driver in self.drivers[:]:
+        """بستن همه کروم‌ها"""
+        print("\n🔒 در حال بستن کروم‌ها...")
+        for driver in self.drivers:
             try:
                 driver.quit()
             except:
                 pass
-        
-        self.drivers.clear()
-        print("✅ All Chrome drivers closed")
+        print("✅ تمام کروم‌ها بسته شدند")
 
 def main():
-    """Main function"""
-    print("🎪 SkyRoom Spam Bot - English Version")
+    """تابع اصلی با دریافت لینک و تعداد کاربران"""
+    print("🎪 اسکریپت اسپم اسکای روم - نسخه توربو")
     print("=" * 40)
-    print("🔥 Features:")
-    print("   ⚡ Fast user joining")
-    print("   🎯 Smart resource management")
-    print("   📊 Real-time monitoring")
-    print("   💨 Emergency stop capability")
-    print("=" * 40)
-    
-    bot = None
     
     try:
-        bot = SkyRoomSpamBot()
-        bot.run_spam()
+        # دریافت لینک اسکای روم از کاربر
+        skyroom_link = input("🔗 لینک اسکای روم را وارد کنید: ").strip()
         
-        input("\n⏹️ Press Enter to close...")
+        if not skyroom_link.startswith('http'):
+            print("❌ لینک نامعتبر! لطفاً یک لینک کامل وارد کنید.")
+            return
         
+        # دریافت تعداد کاربران
+        user_count = int(input("👥 تعداد کاربران مورد نظر را وارد کنید: "))
+        
+        if user_count <= 0:
+            print("❌ تعداد باید بیشتر از ۰ باشد!")
+            return
+        
+        # تأیید نهایی
+        print(f"\n⚠️ آیا مطمئنید می‌خواهید {user_count} کاربر وارد کلاس شوند؟")
+        confirm = input("✅ برای تأیید 'y' را وارد کنید، برای لغو هر کلید دیگر: ")
+        
+        if confirm.lower() != 'y':
+            print("❌ عملیات لغو شد!")
+            return
+        
+        # اجرای اسکریپت
+        bot = SkyRoomFarsiSpam()
+        
+        # شروع مانیتور در thread جداگانه
+        monitor_thread = threading.Thread(target=bot.progress_monitor, args=(user_count,))
+        monitor_thread.daemon = True
+        monitor_thread.start()
+        
+        bot.run_with_user_count(user_count, skyroom_link)
+        
+        input("\n⏹️ برای بستن Enter بزنید...")
+        
+    except ValueError:
+        print("❌ لطفاً یک عدد معتبر وارد کنید!")
     except KeyboardInterrupt:
-        print("\n🛑 Stopped by user...")
+        print("\n🛑 توقف توسط کاربر...")
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")
+        print(f"❌ خطای غیرمنتظره: {e}")
     finally:
-        if bot:
+        try:
             bot.close_all()
+        except:
+            pass
 
 if __name__ == "__main__":
     main()
